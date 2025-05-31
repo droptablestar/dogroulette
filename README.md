@@ -18,6 +18,7 @@ dogroulette/
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt  # first time only
+pre-commit install  # first time only
 cd backend
 uvicorn main:app --reload
 ```
