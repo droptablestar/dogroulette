@@ -1,6 +1,7 @@
 import os
 import time
 from pprint import pprint
+from typing import Optional
 
 import httpx
 from dotenv import load_dotenv
@@ -50,7 +51,12 @@ async def get_petfinder_token():
 
 
 @app.get("/dogs")
-async def get_dogs(limit: int = 1, location: str = Query("10001")):
+async def get_dogs(
+    limit: int = 1,
+    location: Optional[str] = Query(None),
+    lat: Optional[float] = Query(None),
+    lon: Optional[float] = Query(None),
+):
     """
     Returns a list of adoptable dogs.
     Supports limiting results and optional location-based filtering.
@@ -60,8 +66,13 @@ async def get_dogs(limit: int = 1, location: str = Query("10001")):
     params = {
         "type": "dog",
         "limit": limit,
-        # "location": location,
     }
+    if lat and lon:
+        params["location"] = f"{lat},{lon}"
+    elif location:
+        params["location"] = location
+    else:
+        params["location"] = "10001"  # fallback zip
 
     async with httpx.AsyncClient() as client:
         res = await client.get(
@@ -80,6 +91,7 @@ async def get_dogs(limit: int = 1, location: str = Query("10001")):
             "name": animal.get("name"),
             "breed": animal.get("breeds", {}).get("primary"),
             "location": f"{address.get('city')}, {address.get('state')}",
+            "distance": animal.get("distance"),
             "age": animal.get("age"),
             "img_url": (
                 animal["photos"][0]["medium"]

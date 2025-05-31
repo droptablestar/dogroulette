@@ -7,6 +7,7 @@ type Dog = {
   name: string;
   breed: string;
   location: string;
+  distance: string;
   age: string;
   img_url: string;
   source_url: string;
@@ -16,14 +17,19 @@ export default function HomePage() {
   const [dog, setDog] = useState<Dog | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchDog = async () => {
+  const fetchDog = async (lat?: number, lon?: number) => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/dogs?limit=1');
-      const data: Dog[] = await res.json();
-      if (data.length > 0) {
-        setDog(data[0]);
+      const url = new URL('http://localhost:8000/dogs');
+      url.searchParams.append('limit', '1');
+      if (lat && lon) {
+        url.searchParams.append('lat', lat.toString());
+        url.searchParams.append('lon', lon.toString());
       }
+
+      const res = await fetch(url.toString());
+      const data: Dog[] = await res.json();
+      if (data.length > 0) setDog(data[0]);
     } catch (err) {
       console.error('Error fetching dog:', err);
     } finally {
@@ -32,8 +38,25 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    fetchDog();
+    // Try to get user's current position
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const {latitude, longitude} = position.coords;
+          await fetchDog(latitude, longitude);
+        },
+        async (error) => {
+          console.warn('Geolocation error:', error.message);
+          // fallback to default zip/location
+          await fetchDog();
+        }
+      );
+    } else {
+      console.warn('Geolocation not available');
+      fetchDog(); // fallback
+    }
   }, []);
+
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100 text-gray-800">
@@ -52,6 +75,7 @@ export default function HomePage() {
           <p className="mb-2"><strong>Breed:</strong> {dog.breed}</p>
           <p className="mb-2"><strong>Age:</strong> {dog.age}</p>
           <p className="mb-4"><strong>Location:</strong> {dog.location}</p>
+          <p className="mb-4"><strong>Distance:</strong> {dog.distance} miles</p>
           <a
             href={dog.source_url}
             target="_blank"
@@ -61,7 +85,7 @@ export default function HomePage() {
             🐾 Adopt me
           </a>
           <button
-            onClick={fetchDog}
+            onClick={() => fetchDog()}
             className="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
           >
             Show Another Dog
