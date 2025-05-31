@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# FastAPI logs or temp files
+*.log
+
+# Node.js / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# General
+.env
+*.DS_Store
+*.sqlite3
+*.db
+.idea/
+.vscode/
