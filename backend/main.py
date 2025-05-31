@@ -1,6 +1,13 @@
+import os
+import time
+from pprint import pprint
+
+import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
+
+load_dotenv()
 
 app = FastAPI(title="DogRoulette API")
 
@@ -13,35 +20,74 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dummy data for now
-DOGS = [
-    {
-        "id": 1,
-        "name": "Charlie",
-        "breed": "Golden Retriever",
-        "location": "New York, NY",
-        "age": "2 years",
-        "img_url": "https://images.dog.ceo/breeds/retriever-golden/n02099601_3004.jpg",
-        "source_url": "https://www.petfinder.com/petdetail/123456"
-    },
-    {
-        "id": 2,
-        "name": "Bella",
-        "breed": "Corgi",
-        "location": "Philadelphia, PA",
-        "age": "1 year",
-        "img_url": "https://images.dog.ceo/breeds/corgi-cardigan/n02113186_5566.jpg",
-        "source_url": "https://www.petfinder.com/petdetail/789012"
+PETFINDER_CLIENT_ID = os.getenv("PETFINDER_CLIENT_ID")
+PETFINDER_CLIENT_SECRET = os.getenv("PETFINDER_CLIENT_SECRET")
+PETFINDER_TOKEN = None
+PETFINDER_TOKEN_EXPIRY = 0  # UNIX timestamp
+
+
+async def get_petfinder_token():
+    global PETFINDER_TOKEN, PETFINDER_TOKEN_EXPIRY
+
+    now = time.time()
+    if PETFINDER_TOKEN and now < PETFINDER_TOKEN_EXPIRY:
+        return PETFINDER_TOKEN  # naive in-memory cache
+
+    url = "https://api.petfinder.com/v2/oauth2/token"
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": PETFINDER_CLIENT_ID,
+        "client_secret": PETFINDER_CLIENT_SECRET,
     }
-]
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, data=data)
+        response.raise_for_status()
+
+        json = response.json()
+        PETFINDER_TOKEN = json["access_token"]
+        PETFINDER_TOKEN_EXPIRY = now + json["expires_in"] - 60  # subtract buffer (60s)
+        return PETFINDER_TOKEN
+
 
 @app.get("/dogs")
-def get_dogs(limit: int = 1, location: Optional[str] = Query(None)):
+async def get_dogs(limit: int = 1, location: str = Query("10001")):
     """
     Returns a list of adoptable dogs.
     Supports limiting results and optional location-based filtering.
     """
-    results = DOGS
-    if location:
-        results = [dog for dog in results if location.lower() in dog["location"].lower()]
-    return results[:limit]
+    token = await get_petfinder_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {
+        "type": "dog",
+        "limit": limit,
+        # "location": location,
+    }
+
+    async with httpx.AsyncClient() as client:
+        res = await client.get(
+            "https://api.petfinder.com/v2/animals", headers=headers, params=params
+        )
+        res.raise_for_status()
+        data = res.json()["animals"]
+
+    # Map Petfinder data to your Dog object shape
+    dogs = []
+    for animal in data:
+        pprint(animal)
+        address = animal.get("contact", {}).get("address", {})
+        dog = {
+            "id": animal.get("id"),
+            "name": animal.get("name"),
+            "breed": animal.get("breeds", {}).get("primary"),
+            "location": f"{address.get('city')}, {address.get('state')}",
+            "age": animal.get("age"),
+            "img_url": (
+                animal["photos"][0]["medium"]
+                if animal.get("photos")
+                else "https://place-puppy.com/300x300"
+            ),
+            "source_url": animal["url"],
+        }
+        dogs.append(dog)
+
+    return dogs
