@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from sqlmodel import Session, select
 from .models import Shelter
@@ -8,8 +8,7 @@ import pendulum
 
 def create_shelter(session: Session, data: ShelterCreate) -> Shelter:
     stmt = select(Shelter).where(Shelter.petfinder_id == data.petfinder_id)
-    result = session.exec(stmt).first()
-    existing: Optional[Shelter] = result.first()
+    existing = session.exec(stmt).first()
 
     if existing:
         raise ValueError("Shelter already exists")
@@ -19,3 +18,7 @@ def create_shelter(session: Session, data: ShelterCreate) -> Shelter:
     session.commit()
     session.refresh(shelter)
     return shelter
+
+
+def list_shelters(session: Session) -> List[Shelter]:
+    return session.exec(select(Shelter)).all()

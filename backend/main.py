@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.db.session import init_db
+import backend.db  # This is important!
 from backend.shelter.routes import router as shelter_router
 
 load_dotenv()
@@ -17,11 +17,11 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    init_db()
+    backend.db.session.init_db()
     yield
 
 
-app = FastAPI(title="DogRoulette API")
+app = FastAPI(title="DogRoulette API", lifespan=lifespan)
 
 app.include_router(shelter_router, prefix="/shelters", tags=["Shelters"])
 

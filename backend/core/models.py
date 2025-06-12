@@ -1,13 +1,15 @@
-# shared/models.py
-
+from datetime import datetime
 from typing import Optional
-from sqlmodel import SQLModel, Field
-from pendulum import now, DateTime
+
+from pendulum import now
+from sqlmodel import Field, SQLModel
 
 
 class BasePetfinderModel(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     petfinder_id: str = Field(index=True, unique=True)
-    last_updated: DateTime = Field(default_factory=now)
+    last_updated: datetime = Field(default_factory=now)
 
-    model_config = {"arbitrary_types_allowed": True}
+    model_config = {
+        "arbitrary_types_allowed": True,
+    }
