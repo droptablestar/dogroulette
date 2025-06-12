@@ -15,8 +15,6 @@ class PetfinderService:
 
     @classmethod
     async def get_petfinder_token(cls):
-        global PETFINDER_TOKEN, PETFINDER_TOKEN_EXPIRY
-
         now = time.time()
         print("token:", cls.PETFINDER_TOKEN, cls.PETFINDER_TOKEN_EXPIRY)
         if cls.PETFINDER_TOKEN and now < cls.PETFINDER_TOKEN_EXPIRY:
