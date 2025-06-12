@@ -20,7 +20,7 @@ export default function HomePage() {
   const fetchDog = async (lat?: number, lon?: number): Promise<void> => {
     setLoading(true);
     try {
-      const url = new URL('http://localhost:8000/dogs');
+      const url = new URL('http://localhost:8000/pets/dogs');
       url.searchParams.append('limit', '1');
       if (lat && lon) {
         url.searchParams.append('lat', lat.toString());
