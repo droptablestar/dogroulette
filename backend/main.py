@@ -21,7 +21,7 @@ app.include_router(pet_router, prefix="/pets", tags=["Pets"])
 
 # Allow your frontend (localhost:3000 during dev)
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore
     allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],

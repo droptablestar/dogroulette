@@ -1,6 +1,8 @@
+import os
+
 from sqlmodel import SQLModel, create_engine, Session
 
-DATABASE_URL = "sqlite:///./pets.db"  # or use PostgreSQL URL
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 engine = create_engine(DATABASE_URL, echo=True)
 
