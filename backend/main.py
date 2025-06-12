@@ -1,5 +1,6 @@
 import os
 import time
+from contextlib import asynccontextmanager
 from pprint import pprint
 from typing import Optional
 
@@ -8,9 +9,21 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.db.session import init_db
+from backend.shelter.routes import router as shelter_router
+
 load_dotenv()
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    init_db()
+    yield
+
+
 app = FastAPI(title="DogRoulette API")
+
+app.include_router(shelter_router, prefix="/shelters", tags=["Shelters"])
 
 # Allow your frontend (localhost:3000 during dev)
 app.add_middleware(
