@@ -16,17 +16,23 @@ dogroulette/
 ### Backend (FastAPI)
 
 ```bash
-source venv/bin/activate
-pip install -r requirements.txt  # first time only
-pre-commit install  # first time only
-uvicorn backend.main:app --reload
+docker-compose build backend  # first time only
+```
+
+Then can be run with
+```bash
+docker-compose up backend
 ```
 
 ### Frontend (Next.js)
+
 ```bash
-cd frontend
-npm install
-npm run dev
+docker-compose build frontend  # first time only
+```
+
+Then can be run with
+```bash
+docker-compose up frontend
 ```
 
 App will run at http://localhost:3000
