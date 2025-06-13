@@ -66,7 +66,9 @@ class PetfinderService:
 
         # Upsert pet
         petfinder_id = data["id"]
-        pet = session.exec(select(Pet).where(Pet.petfinder_id == str(petfinder_id))).first()
+        pet = session.exec(
+            select(Pet).where(Pet.petfinder_id == str(petfinder_id))
+        ).first()
         if not pet:
             pet = Pet(
                 petfinder_id=str(petfinder_id),

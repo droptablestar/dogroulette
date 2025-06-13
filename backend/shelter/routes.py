@@ -11,7 +11,9 @@ router = APIRouter()
 
 
 @router.post("/", response_model=Shelter)
-def create_shelter_route(payload: ShelterCreate, session: Session = Depends(get_session)):
+def create_shelter_route(
+    payload: ShelterCreate, session: Session = Depends(get_session)
+):
     try:
         return create_shelter(session, payload)
     except ValueError as e:
