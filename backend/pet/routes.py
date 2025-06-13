@@ -46,12 +46,13 @@ async def get_dogs(
     for animal in data:
         pprint(animal)
         address = animal.get("contact", {}).get("address", {})
+        distance = round((animal.get("distance") or 0.0), 1)
         dog = {
             "id": animal.get("id"),
             "name": animal.get("name"),
             "breed": animal.get("breeds", {}).get("primary"),
             "location": f"{address.get('city')}, {address.get('state')}",
-            "distance": animal.get("distance"),
+            "distance": distance,
             "age": animal.get("age"),
             "img_url": (
                 animal["photos"][0]["medium"]
