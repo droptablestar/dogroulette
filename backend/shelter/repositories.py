@@ -21,4 +21,4 @@ def create_shelter(session: Session, data: ShelterCreate) -> Shelter:
 
 
 def list_shelters(session: Session) -> List[Shelter]:
-    return session.exec(select(Shelter)).all()
+    return list(session.exec(select(Shelter)).all())
