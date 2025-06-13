@@ -24,6 +24,7 @@ Then can be run with
 ```bash
 docker-compose up backend
 ```
+Backend will run at http://localhost:8000 and docs are available at `/docs`. 
 
 ### Frontend (Next.js)
 
