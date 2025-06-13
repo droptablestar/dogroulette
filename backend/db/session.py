@@ -1,11 +1,15 @@
 import os
 
-from sqlmodel import SQLModel, create_engine, Session
+from dotenv import load_dotenv
+from sqlalchemy.ext.declarative import declarative_base
+from sqlmodel import SQLModel, Session, create_engine
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL, echo=True)
 
+Base = declarative_base()
 
 def init_db():
     print("Initializing database...")
