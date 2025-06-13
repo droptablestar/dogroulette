@@ -1,4 +1,4 @@
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlmodel import Relationship
 
@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class Shelter(BasePetfinderModel, table=True):
-    name: Optional[str]
-    city: Optional[str]
-    state: Optional[str]
-    country: Optional[str]
-    email: Optional[str]
-    phone: Optional[str]
+    name: str | None
+    city: str | None
+    state: str | None
+    country: str | None
+    email: str | None
+    phone: str | None
 
-    pets: List["Pet"] = Relationship(back_populates="shelter")
+    pets: list["Pet"] = Relationship(back_populates="shelter")

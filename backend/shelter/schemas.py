@@ -1,12 +1,11 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
 
 class ShelterCreate(BaseModel):
     petfinder_id: str
-    name: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+    name: str | None = None
+    city: str | None = None
+    state: str | None = None
+    country: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None

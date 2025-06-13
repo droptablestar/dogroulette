@@ -1,9 +1,7 @@
 from pprint import pprint
-from typing import Optional
 
 import httpx
-from fastapi import APIRouter
-from fastapi import Query
+from fastapi import APIRouter, Query
 
 from backend.core.services import PetfinderService
 
@@ -13,9 +11,9 @@ router = APIRouter()
 @router.get("/dogs")
 async def get_dogs(
     limit: int = 1,
-    location: Optional[str] = Query(None),
-    lat: Optional[float] = Query(None),
-    lon: Optional[float] = Query(None),
+    location: str | None = Query(None),
+    lat: float | None = Query(None),
+    lon: float | None = Query(None),
 ):
     """
     Returns a list of adoptable dogs.
@@ -36,7 +34,7 @@ async def get_dogs(
 
     async with httpx.AsyncClient() as client:
         res = await client.get(
-            "https://api.petfinder.com/v2/animals", headers=headers, params=params
+            f"{PetfinderService.PETFINDER_URL}/animals", headers=headers, params=params
         )
         res.raise_for_status()
         data = res.json()["animals"]

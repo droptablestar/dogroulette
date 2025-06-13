@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, Relationship
@@ -12,14 +12,14 @@ if TYPE_CHECKING:
 
 class Pet(BasePetfinderModel, table=True):
     name: str
-    age: Optional[str]
-    gender: Optional[str]
-    size: Optional[str]
-    breed: Optional[str]
-    description: Optional[str]
-    photos: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    status: Optional[str]
-    published_at: Optional[datetime] = Field(default=None)
+    age: str | None
+    gender: str | None
+    size: str | None
+    breed: str | None
+    description: str | None
+    photos: dict | None = Field(default=None, sa_column=Column(JSON))
+    status: str | None
+    published_at: datetime | None = Field(default=None)
 
-    shelter_id: Optional[int] = Field(default=None, foreign_key="shelter.id")
+    shelter_id: int | None = Field(default=None, foreign_key="shelter.id")
     shelter: Optional["Shelter"] = Relationship(back_populates="pets")

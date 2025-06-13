@@ -1,9 +1,8 @@
-from typing import List, Optional
-
+import pendulum
 from sqlmodel import Session, select
+
 from .models import Shelter
 from .schemas import ShelterCreate
-import pendulum
 
 
 def create_shelter(session: Session, data: ShelterCreate) -> Shelter:
@@ -20,5 +19,5 @@ def create_shelter(session: Session, data: ShelterCreate) -> Shelter:
     return shelter
 
 
-def list_shelters(session: Session) -> List[Shelter]:
+def list_shelters(session: Session) -> list[Shelter]:
     return list(session.exec(select(Shelter)).all())
