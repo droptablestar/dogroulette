@@ -8,7 +8,9 @@ services:
     working_dir: /app/backend
     ports:
       - "8000:8000"
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - postgres
+    command: ["./wait-for-it.sh", "postgres", "5432", "--", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app

@@ -13,7 +13,7 @@ from backend.db.session import Base
 from backend.pet import models as pet_models  # noqa: F401
 from backend.shelter import models as shelter_models  # noqa: F401
 
-target_metadata = Base.metadata
+target_metadata = Base
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

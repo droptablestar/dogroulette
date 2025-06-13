@@ -1,20 +1,11 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import backend.db  # This is important!
+import backend.db  # noqa: F401
 from backend.pet.routes import router as pet_router
 from backend.shelter.routes import router as shelter_router
 
-
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    backend.db.session.init_db()
-    yield
-
-
-app = FastAPI(title="DogRoulette API", lifespan=lifespan)
+app = FastAPI(title="DogRoulette API")
 
 app.include_router(shelter_router, prefix="/shelters", tags=["Shelters"])
 app.include_router(pet_router, prefix="/pets", tags=["Pets"])
