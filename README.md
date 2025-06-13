@@ -1,6 +1,7 @@
 # 🐶 DogRoulette
 
-DogRoulette is a full-stack web app that shows adoptable dogs near you, pulled from multiple pet adoption APIs.
+DogRoulette is a full-stack web app that shows adoptable dogs near you, pulled
+from the Petfinder API: https://www.petfinder.com/developers/v2/docs/.
 
 ## 🗂 Project Structure
 
