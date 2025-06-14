@@ -17,7 +17,9 @@ dogroulette/
 ### Backend (FastAPI)
 
 ```bash
-docker-compose build backend  # first time only
+# first time only
+pre-commit install
+docker-compose build backend
 ```
 
 Then can be run with
