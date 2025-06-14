@@ -6,7 +6,7 @@ from sqlmodel import Field, SQLModel
 
 class BasePetfinderModel(SQLModel):
     id: int | None = Field(default=None, primary_key=True)
-    petfinder_id: str = Field(index=True, unique=True)
+    petfinder_id: int = Field(index=True, unique=True)
     last_updated: datetime = Field(default_factory=now)
 
     model_config = {

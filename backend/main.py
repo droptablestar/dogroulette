@@ -3,10 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import db  # noqa: F401
-from core.scheduler import start_scheduler
-from pet.routes import router as pet_router
-from shelter.routes import router as shelter_router
+from backend.core.scheduler import start_scheduler
+from backend.pet.routes import router as pet_router
+from backend.shelter.routes import router as shelter_router
 
 
 @asynccontextmanager

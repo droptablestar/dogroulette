@@ -9,7 +9,7 @@ scheduler = AsyncIOScheduler()
 def start_scheduler():
     scheduler.add_job(
         PetfinderService.run_sync,
-        trigger=IntervalTrigger(hours=1),
+        trigger=IntervalTrigger(hours=5),
         name="Fetch adoptable dogs from Petfinder",
         replace_existing=True,
     )

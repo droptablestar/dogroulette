@@ -1,22 +1,22 @@
-"""initial
+"""initial migration
 
-Revision ID: 3342b4cce67d
+Revision ID: bca921c5d413
 Revises:
-Create Date: 2025-06-13 04:51:41.102629
+Create Date: 2025-06-14 14:55:51.817551
 
 """
 
-from collections.abc import Sequence
+from typing import Sequence, Union
 
+from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "3342b4cce67d"
-down_revision: str | None = None
-branch_labels: str | Sequence[str] | None = None
-depends_on: str | Sequence[str] | None = None
+revision: str = "bca921c5d413"
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.create_table(
         "shelter",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("petfinder_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("petfinder_id", sa.Integer(), nullable=False),
         sa.Column("last_updated", sa.DateTime(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("city", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -36,12 +36,15 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_shelter_petfinder_id"), "shelter", ["petfinder_id"], unique=True
+        op.f("ix_shelter_petfinder_id"),
+        "shelter",
+        ["petfinder_id"],
+        unique=True,
     )
     op.create_table(
         "pet",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("petfinder_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("petfinder_id", sa.Integer(), nullable=False),
         sa.Column("last_updated", sa.DateTime(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("age", sqlmodel.sql.sqltypes.AutoString(), nullable=True),

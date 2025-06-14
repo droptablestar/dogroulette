@@ -1,8 +1,8 @@
-import asyncio
 import os
 import time
-from datetime import datetime
+from pprint import pprint
 
+import pendulum
 import httpx
 from dotenv import load_dotenv
 from sqlmodel import Session, select
@@ -45,34 +45,13 @@ class PetfinderService:
 
     @staticmethod
     def store_data(data: dict, session: Session):
-        # Upsert shelter
-        shelter_info = data.get("organization", {})
-        shelter = session.exec(
-            select(Shelter).where(Shelter.petfinder_id == shelter_info["id"])
-        ).first()
-        if not shelter:
-            shelter = Shelter(
-                petfinder_id=shelter_info["id"],
-                name=shelter_info.get("name"),
-                city=shelter_info.get("address", {}).get("city"),
-                state=shelter_info.get("address", {}).get("state"),
-                country="US",  # fallback default
-                email=shelter_info.get("email"),
-                phone=shelter_info.get("phone"),
-                last_updated=datetime.utcnow(),
-            )
-            session.add(shelter)
-            session.flush()
-
         # Upsert pet
-        petfinder_id = data["id"]
-        pet = session.exec(
-            select(Pet).where(Pet.petfinder_id == str(petfinder_id))
-        ).first()
+        petfinder_id = data.get("id", 0)
+        print(f"petfinder id: {petfinder_id}")
+        pet = session.exec(select(Pet).where(Pet.petfinder_id == petfinder_id)).first()
         if not pet:
             pet = Pet(
-                petfinder_id=str(petfinder_id),
-                last_updated=datetime.utcnow(),
+                petfinder_id=petfinder_id,
                 name=data.get("name"),
                 age=data.get("age"),
                 gender=data.get("gender"),
@@ -82,14 +61,20 @@ class PetfinderService:
                 photos=data.get("photos"),
                 status=data.get("status"),
                 published_at=data.get("published_at"),
-                shelter_id=shelter.id,
+                last_updated=pendulum.now("UTC"),
             )
             session.add(pet)
 
         session.commit()
 
     @classmethod
-    async def run_sync(cls, location: tuple[str, str] | tuple[float, float] | int):
+    async def run_sync(cls):
+        locations = ["Baltimore, MD"]
+        for location in locations:
+            await cls.sync_data(location)
+
+    @classmethod
+    async def sync_data(cls, location: str | tuple[float, float] | int):
         """
         This method is intended to run periodically and keep local DB data in
         sync with Petfinder (and/or any other APIs we integrate with in the
@@ -100,22 +85,25 @@ class PetfinderService:
         Returns:
             `None`
         """
-        headers = {"Authorization": f"Bearer {cls.PETFINDER_TOKEN}"}
-        limit = 100
+        token = await cls.get_petfinder_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        url = f"{cls.PETFINDER_URL}/animals"
+        limit = 1
         print(f"Running sync on {location}...")
         print(f"headers: {headers}")
+        print(f"url: {url}")
 
-        # async with httpx.AsyncClient() as client:
-        #     res = await client.get(
-        #         f"{cls.PETFINDER_URL}/animals",
-        #         headers=headers,
-        #         params={"type": "dog", "location": location, "limit": limit},
-        #     )
-        #     res.raise_for_status()
-        #     data = res.json()
-        #
-        # pets = data["animals"]
-        #
-        # with next(get_session()) as session:
-        #     for pet_data in pets:
-        #         cls.store_data(pet_data, session)
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                f"{cls.PETFINDER_URL}/animals",
+                headers=headers,
+                params={"type": "dog", "location": location, "limit": limit},
+            )
+            res.raise_for_status()
+            data = res.json()
+        pprint(data)
+        pets = data["animals"]
+
+        with next(get_session()) as session:
+            for pet_data in pets:
+                cls.store_data(pet_data, session)
