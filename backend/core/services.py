@@ -89,25 +89,33 @@ class PetfinderService:
         session.commit()
 
     @classmethod
-    async def run_sync(cls):
+    async def run_sync(cls, location: tuple[str, str] | tuple[float, float] | int):
+        """
+        This method is intended to run periodically and keep local DB data in
+        sync with Petfinder (and/or any other APIs we integrate with in the
+        future).
+
+        Args:
+            location: city, state; latitude,longitude; or postal code.
+        Returns:
+            `None`
+        """
         headers = {"Authorization": f"Bearer {cls.PETFINDER_TOKEN}"}
-        location = "10001"
         limit = 100
+        print(f"Running sync on {location}...")
+        print(f"headers: {headers}")
 
-        async with httpx.AsyncClient() as client:
-            res = await client.get(
-                f"{cls.PETFINDER_URL}/animals",
-                headers=headers,
-                params={"type": "dog", "location": location, "limit": limit},
-            )
-            res.raise_for_status()
-            data = res.json()
-
-        pets = data["animals"]
-
-        with next(get_session()) as session:
-            for pet_data in pets:
-                cls.store_data(pet_data, session)
-
-    if __name__ == "__main__":
-        asyncio.run(run_sync())
+        # async with httpx.AsyncClient() as client:
+        #     res = await client.get(
+        #         f"{cls.PETFINDER_URL}/animals",
+        #         headers=headers,
+        #         params={"type": "dog", "location": location, "limit": limit},
+        #     )
+        #     res.raise_for_status()
+        #     data = res.json()
+        #
+        # pets = data["animals"]
+        #
+        # with next(get_session()) as session:
+        #     for pet_data in pets:
+        #         cls.store_data(pet_data, session)
