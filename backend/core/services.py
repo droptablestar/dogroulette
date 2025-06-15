@@ -168,3 +168,7 @@ class LoggingService:
             lgr.handlers.clear()
 
         logging.basicConfig(level=logging.INFO, handlers=[handler])
+
+    @staticmethod
+    def get_logger(name: str) -> logging.Logger:
+        return logging.getLogger(name)
