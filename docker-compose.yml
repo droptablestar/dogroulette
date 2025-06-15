@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     volumes:
-      - .:/app
+      - ./backend:/app/backend
     working_dir: /app/backend
     ports:
       - "8000:8000"
