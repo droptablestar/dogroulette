@@ -1,25 +1,16 @@
-from datetime import datetime
-from typing import TYPE_CHECKING, Optional
-
-from sqlalchemy import JSON
-from sqlmodel import Column, Field, Relationship
-
-from backend.core.models import BasePetfinderModel
-
-if TYPE_CHECKING:
-    from backend.shelter.models import Shelter
+from django.db import models
 
 
-class Pet(BasePetfinderModel, table=True):
-    name: str
-    age: str | None
-    gender: str | None
-    size: str | None
-    breed: str | None
-    description: str | None
-    photos: dict | None = Field(default=None, sa_column=Column(JSON))
-    status: str | None
-    published_at: datetime | None = Field(default=None)
+class Pet(models.Model):
+    name = models.CharField(max_length=255)
+    age = models.CharField(max_length=50, blank=True, default="")
+    gender = models.CharField(max_length=50, blank=True, default="")
+    size = models.CharField(max_length=50, blank=True, default="")
+    breed = models.CharField(max_length=255, blank=True, default="")
+    description = models.TextField(blank=True, default="")
+    photos = models.JSONField(null=True, blank=True)
+    status = models.CharField(max_length=50, blank=True, default="")
+    published_at = models.DateTimeField(null=True, blank=True)
 
-    shelter_id: int | None = Field(default=None, foreign_key="shelter.id")
-    shelter: Optional["Shelter"] = Relationship(back_populates="pets")
+    def __str__(self):
+        return self.name

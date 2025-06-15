@@ -10,7 +10,16 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
-    command: ["./wait-for-it.sh", "postgres", "5432", "--", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command:
+      - sh
+      - -c
+      - |
+          until psql postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB -c '\q' 2>/dev/null; do
+            echo "⏳ Waiting for Postgres..."
+            sleep 1
+          done
+          echo "✅ Postgres is ready"
+          python manage.py runserver 0.0.0.0:8000
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
