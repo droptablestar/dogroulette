@@ -1,17 +1,21 @@
+import logging
 import os
+import sys
 import time
 from pprint import pprint
 
-import pendulum
+import colorlog
 import httpx
+import pendulum
 from dotenv import load_dotenv
 from sqlmodel import Session, select
 
 from backend.db.session import get_session
 from backend.pet.models import Pet
-from backend.shelter.models import Shelter
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class PetfinderService:
@@ -24,7 +28,7 @@ class PetfinderService:
     @classmethod
     async def get_petfinder_token(cls):
         now = time.time()
-        print("token:", cls.PETFINDER_TOKEN, cls.PETFINDER_TOKEN_EXPIRY)
+        logger.info("token:", cls.PETFINDER_TOKEN, cls.PETFINDER_TOKEN_EXPIRY)
         if cls.PETFINDER_TOKEN and now < cls.PETFINDER_TOKEN_EXPIRY:
             return cls.PETFINDER_TOKEN  # naive in-memory cache
 
@@ -47,7 +51,7 @@ class PetfinderService:
     def store_data(data: dict, session: Session):
         # Upsert pet
         petfinder_id = data.get("id", 0)
-        print(f"petfinder id: {petfinder_id}")
+        logger.info(f"petfinder id: {petfinder_id}")
         pet = session.exec(select(Pet).where(Pet.petfinder_id == petfinder_id)).first()
         if not pet:
             pet = Pet(
@@ -88,22 +92,79 @@ class PetfinderService:
         token = await cls.get_petfinder_token()
         headers = {"Authorization": f"Bearer {token}"}
         url = f"{cls.PETFINDER_URL}/animals"
-        limit = 1
-        print(f"Running sync on {location}...")
-        print(f"headers: {headers}")
-        print(f"url: {url}")
-
-        async with httpx.AsyncClient() as client:
-            res = await client.get(
-                f"{cls.PETFINDER_URL}/animals",
-                headers=headers,
-                params={"type": "dog", "location": location, "limit": limit},
-            )
-            res.raise_for_status()
+        limit = 1000
+        page = 1
+        page_limit = 1
+        logger.info(f"Running sync on {location}...")
+        logger.info(f"headers: {headers}")
+        logger.info(f"url: {url}")
+        pets = []
+        while page <= page_limit and page < 50:
+            logger.info(f"Reqesting page {page}...")
+            async with httpx.AsyncClient() as client:
+                try:
+                    res = await client.get(
+                        f"{cls.PETFINDER_URL}/animals",
+                        headers=headers,
+                        params={
+                            "type": "dog",
+                            "location": location,
+                            "limit": min(limit, 100),  # fix here
+                            "page": page,
+                        },
+                    )
+                    res.raise_for_status()
+                except httpx.HTTPStatusError as exc:
+                    print(
+                        f"Petfinder API error {exc.response.status_code}: {exc.response.text}"
+                    )
+                    continue
             data = res.json()
-        pprint(data)
-        pets = data["animals"]
+            pprint(data)
+            pets.extend(data["animals"])
 
-        with next(get_session()) as session:
-            for pet_data in pets:
-                cls.store_data(pet_data, session)
+            # check pagination for more results
+            pagination = data.get("pagination", {})
+            page = pagination.get("current_page", page) + 1
+            page_limit = pagination.get("total_pages", page)
+            if page > page_limit:
+                time.sleep(0.5)
+            logger.info("")
+            logger.info("*" * 50)
+            logger.info("")
+            pprint(pets[0])
+            logger.info("*" * 50)
+
+            with next(get_session()) as session:
+                for pet_data in pets:
+                    cls.store_data(pet_data, session)
+
+
+class LoggingService:
+    @staticmethod
+    def setup_logging():
+        handler = colorlog.StreamHandler(sys.stdout)
+        handler.setFormatter(
+            colorlog.ColoredFormatter(
+                "%(log_color)s%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "bold_red",
+                },
+            )
+        )
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.INFO)
+        root_logger.handlers.clear()  # This line removes any default handlers
+        root_logger.addHandler(handler)
+
+        # Now explicitly quiet third-party loggers
+        for noisy in ("httpx", "sqlalchemy.engine"):
+            lgr = logging.getLogger(noisy)
+            lgr.setLevel(logging.WARNING)
+            lgr.handlers.clear()
+
+        logging.basicConfig(level=logging.INFO, handlers=[handler])
