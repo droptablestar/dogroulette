@@ -1,14 +1,14 @@
 import os
+
 import httpx
-import logging
-from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
+from jose import jwt
 from sqlmodel import Session, select
 
 from backend.core.services import LoggingService
-from .models import User
 from backend.db.session import get_session
-from jose import jwt
+from .models import User
 
 router = APIRouter()
 logger = LoggingService.get_logger(__name__)
